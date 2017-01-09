@@ -152,8 +152,6 @@ class MarathonClientApp(Application):
 
     def run_app(self):
         marathon_server = MarathonClient("http://" + self.marathon_host + ":" + self.marathon_port)
-        # TODO command line argument
-        #marathon_app = '/bash/nc-listen-test'
 
         ### validate socket connection with given host and port
         self.connect(self.marathon_host, int(self.marathon_port))
