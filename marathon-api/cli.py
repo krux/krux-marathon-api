@@ -41,7 +41,6 @@ class MarathonClientApp(Application):
         )
         group.add_argument(
             '--config_file',
-            #default=False,
             help='Marathon config file to configure app. ',
         )
         group.add_argument(
@@ -49,6 +48,12 @@ class MarathonClientApp(Application):
             default=False,
             help='app flag can be used to pass an app name to get '
             'more detailed info on a running app ',
+        )
+        group.add_argument(
+            '--delete',
+            action='store_true',
+            default=False,
+            help='Set flag to delete an app '
         )
 
     def connect(self, address, port):
@@ -109,14 +114,20 @@ class MarathonClientApp(Application):
 
     def get_marathon_app(self, marathon_server, config_file_data):
         self.logger.info("Getting app info from the marthon server")
-        # TODO test if attributes exist
-        try:
-            marathon_app_result = marathon_server.get_app(config_file_data["id"])
-        except Exception as e:
-            self.logger.warn("App doesn't exist %s. Exception is %s" % (config_file_data["id"], e))
-            ### App doesn't exist; initialize it
-            self.create_marathon_app(marathon_server, config_file_data)
-            marathon_app_result = marathon_server.get_app(config_file_data["id"])
+        if self.marathon_config_file:
+            try:
+                marathon_app_result = marathon_server.get_app(config_file_data["id"])
+            except Exception as e:
+                self.logger.warn("App doesn't exist %s. Exception is %s" % (config_file_data["id"], e))
+                ### App doesn't exist; initialize it
+                self.create_marathon_app(marathon_server, config_file_data)
+                marathon_app_result = marathon_server.get_app(config_file_data["id"])
+        elif self.args.app:
+            try:
+                marathon_app_result = marathon_server.get_app(config_file_data)
+            except Exception as e:
+                self.logger.warn("App doesn't exist %s. Exception is %s" % (config_file_data, e))
+                sys.exit(1)
 
         print(marathon_app_result.id)
         return marathon_app_result
@@ -128,11 +139,16 @@ class MarathonClientApp(Application):
 
     def create_marathon_app(self, marathon_server, config_file_data):
         self.logger.info("App wasn't found. Creating new marathon app")
-
+        print("Creating marathon app.")
         self.logger.info(config_file_data["id"])
 
         ### Initialize app creation and name space
         marathon_server.create_app(config_file_data["id"], MarathonApp(cmd='test', mem=1, cpus=.01))
+
+    def delete_marathon_app(self, marathon_server, marathon_app):
+        self.logger.info("Deleting :")
+        self.logger.info(marathon_app)
+        marathon_server.delete_app(marathon_app)
 
     def run_app(self):
         marathon_server = MarathonClient("http://" + self.marathon_host + ":" + self.marathon_port)
@@ -160,9 +176,14 @@ class MarathonClientApp(Application):
             ### update a marathon app
             self.update_marathon_app(marathon_server, config_file_data, marathon_app_result)
 
-        ### TODO if we didn't pass a file, check to see if an app name was passed
         elif self.args.app:
             print(self.args.app)
+            marathon_app_result = self.get_marathon_app(marathon_server, self.args.app)
+
+        ### Delete marathon app
+        if self.args.delete:
+            self.delete_marathon_app(marathon_server, marathon_app_result.id)
+
 
 def main():
     app = MarathonClientApp()
