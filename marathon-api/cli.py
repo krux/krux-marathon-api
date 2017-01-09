@@ -114,11 +114,9 @@ class MarathonClientApp(Application):
             marathon_app_result = marathon_server.get_app(config_file_data["id"])
         except Exception as e:
             self.logger.warn("App doesn't exist %s. Exception is %s" % (config_file_data["id"], e))
-            ### App doesn't exist; create it
-            marathon_app_result = marathon_server
-            self.create_marathon_app(marathon_server, config_file_data, marathon_app_result)
-            # TODO create new app instead of system exit
-            sys.exit(1)
+            ### App doesn't exist; initialize it
+            self.create_marathon_app(marathon_server, config_file_data)
+            marathon_app_result = marathon_server.get_app(config_file_data["id"])
 
         print(marathon_app_result.id)
         return marathon_app_result
@@ -128,17 +126,13 @@ class MarathonClientApp(Application):
         self.logger.info("Update marthon server with updated app data")
         marathon_server.update_app(config_file_data["id"], marathon_app_result, force=False, minimal=True)
 
-    def create_marathon_app(self, marathon_server, config_file_data, marathon_app_result):
+    def create_marathon_app(self, marathon_server, config_file_data):
         self.logger.info("App wasn't found. Creating new marathon app")
 
-        ### we haven't assigned the json values yet, do that now
-        ### creation is the only time we want to assign the ID too.
-        self.assign_config_data(config_file_data, marathon_app_result)
-        marathon_app_result.id = config_file_data["id"]
-        self.logger.info("marathon_app_result: ")
-        self.logger.info(marathon_app_result.id)
+        self.logger.info(config_file_data["id"])
 
-        #marathon_server.create_app(marathon_app_result.id, marathon_app_result)
+        ### Initialize app creation and name space
+        marathon_server.create_app(config_file_data["id"], MarathonApp(cmd='test', mem=1, cpus=.01))
 
     def run_app(self):
         marathon_server = MarathonClient("http://" + self.marathon_host + ":" + self.marathon_port)
