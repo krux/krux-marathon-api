@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-#import krux.cli
 import krux.logging
 import sys
 import socket
@@ -53,6 +52,10 @@ class MarathonClientApp(Application):
         )
 
     def connect(self, address, port):
+        self.logger.info("Testing connection to marthon server")
+        self.logger.info('host = ' + address)
+        self.logger.info('port = ' + str(port))
+
         try:
             s = socket.socket()
             s.connect((address, port))
@@ -63,37 +66,79 @@ class MarathonClientApp(Application):
             s.close()
 
     def read_config_file(self, config_file):
+        self.logger.info("Reading config file and formatting data.")
         print(config_file)
         ### open and load json config file
-        with open(config_file) as data_file:
-            data = json.load(data_file)
+        try:
+            with open(config_file) as data_file:
+                data = json.load(data_file)
+        except Exception as e:
+            self.logger.error("Error in json file:  %s. Exception is %s" % (config_file, e))
+            sys.exit(1)
         return data
 
+    def assign_config_data(self, config_file_data, marathon_app_result):
+        ### assigning values from json to our marathon app
+        self.logger.info("Assigning json variables to app data")
+        marathon_app_result.cpus                     = config_file_data["cpus"]
+        marathon_app_result.mem                      = config_file_data["mem"]
+        marathon_app_result.instances                = config_file_data["instances"]
+        marathon_app_result.disk                     = config_file_data["disk"]
+        marathon_app_result.cmd                      = config_file_data["cmd"]
+        marathon_app_result.backoff_factor           = config_file_data["backoff_factor"]
+        marathon_app_result.constraints              = config_file_data["constraints"]
+        marathon_app_result.container                = config_file_data["container"]
+        marathon_app_result.dependencies             = config_file_data["dependencies"]
+        marathon_app_result.env                      = config_file_data["env"]
+        marathon_app_result.executor                 = config_file_data["executor"]
+        marathon_app_result.health_checks            = config_file_data["health_checks"]
+        marathon_app_result.labels                   = config_file_data["labels"]
+        marathon_app_result.max_launch_delay_seconds = config_file_data["max_launch_delay_seconds"]
+        #marathon_app_result.ports = config_file_data["ports"]      # You cannot specify both ports and port definitions
+        marathon_app_result.require_ports            = config_file_data["require_ports"]
+        marathon_app_result.store_urls               = config_file_data["store_urls"]
+        marathon_app_result.upgrade_strategy         = config_file_data["upgrade_strategy"]
+        marathon_app_result.uris                     = config_file_data["uris"]
+        marathon_app_result.user                     = config_file_data["user"]                 #updates confirmed
+
     def list_marathon_apps(self, marathon_server):
+        self.logger.info("Listing apps running on marathon")
         current_marathon_apps = marathon_server.list_apps()
         self.logger.info(current_marathon_apps)
         print(current_marathon_apps)
 
-    def get_marathon_app(self, marathon_server, marathon_app):
+    def get_marathon_app(self, marathon_server, config_file_data):
+        self.logger.info("Getting app info from the marthon server")
         # TODO test if attributes exist
-        # TODO update attributes
         try:
-            marathon_app_result = marathon_server.get_app(marathon_app)
+            marathon_app_result = marathon_server.get_app(config_file_data["id"])
         except Exception as e:
-            self.logger.error("App doesn't exist %s. Exception is %s" % (marathon_app, e))
+            self.logger.warn("App doesn't exist %s. Exception is %s" % (config_file_data["id"], e))
+            ### App doesn't exist; create it
+            marathon_app_result = marathon_server
+            self.create_marathon_app(marathon_server, config_file_data, marathon_app_result)
             # TODO create new app instead of system exit
             sys.exit(1)
 
-        marathon_app_id = marathon_server.get_app(marathon_app).id
-
-        print(marathon_app_id)
+        print(marathon_app_result.id)
         return marathon_app_result
 
     def update_marathon_app(self, marathon_server, config_file_data, marathon_app_result):
-        marathon_app_result.cpus = config_file_data["cpus"]
-        marathon_app_result.instances = config_file_data["instances"]
-        marathon_app_result.disk = config_file_data["disk"]
+        ### API call to marathon server to update the app if the values have changed
+        self.logger.info("Update marthon server with updated app data")
         marathon_server.update_app(config_file_data["id"], marathon_app_result, force=False, minimal=True)
+
+    def create_marathon_app(self, marathon_server, config_file_data, marathon_app_result):
+        self.logger.info("App wasn't found. Creating new marathon app")
+
+        ### we haven't assigned the json values yet, do that now
+        ### creation is the only time we want to assign the ID too.
+        self.assign_config_data(config_file_data, marathon_app_result)
+        marathon_app_result.id = config_file_data["id"]
+        self.logger.info("marathon_app_result: ")
+        self.logger.info(marathon_app_result.id)
+
+        #marathon_server.create_app(marathon_app_result.id, marathon_app_result)
 
     def run_app(self):
         marathon_server = MarathonClient("http://" + self.marathon_host + ":" + self.marathon_port)
@@ -103,20 +148,20 @@ class MarathonClientApp(Application):
         ### validate socket connection with given host and port
         self.connect(self.marathon_host, int(self.marathon_port))
 
-        self.logger.info('host = ' + self.marathon_host)
-        self.logger.info('port = ' + self.marathon_port)
-
         ### list all apps if flag is called
         if self.marathon_list_apps:
             self.list_marathon_apps(marathon_server)
 
-        ### Config file load, only if we passed the flag
+        ### Config file load, only if we passed the variable
         if self.marathon_config_file:
             config_file_data = self.read_config_file(self.marathon_config_file)
 
             ### get a specific marathon app
-            marathon_app_result = self.get_marathon_app(marathon_server, config_file_data["id"])
+            marathon_app_result = self.get_marathon_app(marathon_server, config_file_data)
             self.logger.info(marathon_app_result)
+
+            ### update app data variable with config file values
+            self.assign_config_data(config_file_data, marathon_app_result)
 
             ### update a marathon app
             self.update_marathon_app(marathon_server, config_file_data, marathon_app_result)
@@ -124,12 +169,6 @@ class MarathonClientApp(Application):
         ### TODO if we didn't pass a file, check to see if an app name was passed
         elif self.args.app:
             print(self.args.app)
-
-
-        ### TESTS
-        # pprint(data)
-        # print data["cpus"]
-
 
 def main():
     app = MarathonClientApp()
