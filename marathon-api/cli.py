@@ -129,7 +129,7 @@ class MarathonClientApp(Application):
                 self.logger.warn("App doesn't exist %s. Exception is %s" % (config_file_data, e))
                 sys.exit(1)
 
-        print(marathon_app_result.id)
+        print(marathon_app_result)
         return marathon_app_result
 
     def update_marathon_app(self, marathon_server, config_file_data, marathon_app_result):
@@ -144,11 +144,13 @@ class MarathonClientApp(Application):
 
         ### Initialize app creation and name space
         marathon_server.create_app(config_file_data["id"], MarathonApp(cmd='test', mem=1, cpus=.01))
+        print("Done creating marathon app.")
 
     def delete_marathon_app(self, marathon_server, marathon_app):
         self.logger.info("Deleting :")
         self.logger.info(marathon_app)
         marathon_server.delete_app(marathon_app)
+        print("Marathon app deleted.")
 
     def run_app(self):
         marathon_server = MarathonClient("http://" + self.marathon_host + ":" + self.marathon_port)
