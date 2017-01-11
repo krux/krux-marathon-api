@@ -1,13 +1,26 @@
 #!/usr/bin/env python
 
+#
+# Standard libraries
+#
+
 from __future__ import absolute_import
-import krux.logging
 import sys
 import socket
 import json
-from pprint import pprint
+
+#
+# Third party libraries
+#
+
 from marathon import MarathonClient
 from marathon.models import MarathonApp
+
+#
+# Internal libraries
+#
+
+import krux.logging
 from krux.cli import Application, get_group, get_parser
 
 

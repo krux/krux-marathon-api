@@ -5,10 +5,6 @@
 #
 
 from __future__ import absolute_import
-import sys
-import socket
-import json
-from pprint import pprint
 
 #
 # Third party libraries
