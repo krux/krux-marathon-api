@@ -19,7 +19,7 @@ You can delete an app using the json file or just using the app name
 
 ```./cli.py --config_file ../bash_nc_listen_sample.json --delete```
 
-```./cli.py --app /bash/nc-listen-test --delete```
+```./cli.py --get_app /bash/nc-listen-test --delete```
 
 ## List all Applications
 List all applications on your Marathon Server.
@@ -36,7 +36,7 @@ usage: cli.py [-h] [--log-level {info,debug,critical,warning,error}]
               [--stats] [--stats-host STATS_HOST] [--stats-port STATS_PORT]
               [--stats-environment STATS_ENVIRONMENT] [--lock-dir LOCK_DIR]
               [--host HOST] [--port PORT] [--list_apps]
-              [--config_file CONFIG_FILE] [--app APP] [--delete]
+              [--config_file CONFIG_FILE] [--get_app APP] [--delete]
 
 marathonclientapp
 
@@ -66,12 +66,12 @@ lockfile:
   --lock-dir LOCK_DIR   Dir where lock files are stored (default: /tmp)
 
 marathonclientapp:
-  --host HOST           Marthon server host name or IP address.
-  --port PORT           Marthon server port.
+  --host HOST           Marathon server host name or IP address.
+  --port PORT           Marathon server port.
   --list_apps           Use flag to list all marathon apps.
   --config_file CONFIG_FILE
                         Marathon config file to configure app.
-  --app APP             app flag can be used to pass an app name to get more
+  --get_app APP         app flag can be used to pass an app name to get more
                         detailed info on a running app
   --delete              Set flag to delete an app
 ```

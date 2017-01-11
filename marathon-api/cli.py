@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import absolute_import
 import krux.logging
 import sys
 import socket
@@ -20,18 +21,21 @@ class MarathonClientApp(Application):
         self.marathon_config_file = self.args.config_file
 
     def add_cli_arguments(self, parser):
+        """
+        Adds command line arguments, these options can be seen using -h when calling the app.
+        """
         super(MarathonClientApp, self).add_cli_arguments(parser)
         group = get_group(parser, self.name)
 
         group.add_argument(
             '--host',
             default='localhost',
-            help='Marthon server host name or IP address. ',
+            help='Marathon server host name or IP address. ',
         )
         group.add_argument(
             '--port',
             default='8080',
-            help='Marthon server port. ',
+            help='Marathon server port. ',
         )
         group.add_argument(
             '--list_apps',
@@ -44,7 +48,7 @@ class MarathonClientApp(Application):
             help='Marathon config file to configure app. ',
         )
         group.add_argument(
-            '--app',
+            '--get_app',
             default=False,
             help='app flag can be used to pass an app name to get '
             'more detailed info on a running app ',
@@ -57,7 +61,12 @@ class MarathonClientApp(Application):
         )
 
     def connect(self, address, port):
-        self.logger.info("Testing connection to marthon server")
+        """
+        Tests connecting to the Marathon Server given. Takes in a host and port.
+        If the values weren't passed on the command line, defaults will be used.
+        If the connection fails, the program will stop and exit with a value of 1.
+        """
+        self.logger.info("Testing connection to marathon server")
         self.logger.info('host = ' + address)
         self.logger.info('port = ' + str(port))
 
@@ -71,8 +80,12 @@ class MarathonClientApp(Application):
             s.close()
 
     def read_config_file(self, config_file):
+        """
+        Open the json file passed on the command line. The program will stop and
+        exit with a value of 1 if it cannot open or parse the json file.
+        """
         self.logger.info("Reading config file and formatting data.")
-        print(config_file)
+        self.logger.info(config_file)
         ### open and load json config file
         try:
             with open(config_file) as data_file:
@@ -83,6 +96,10 @@ class MarathonClientApp(Application):
         return data
 
     def assign_config_data(self, config_file_data, marathon_app_result):
+        """
+        Assign variables from the config file to the marathon app values.
+        We cannot use a dymnamic variable so we are assigning these one at a time.
+        """
         ### assigning values from json to our marathon app
         self.logger.info("Assigning json variables to app data")
         marathon_app_result.cpus                     = config_file_data["cpus"]
@@ -107,13 +124,23 @@ class MarathonClientApp(Application):
         marathon_app_result.user                     = config_file_data["user"]                 #updates confirmed
 
     def list_marathon_apps(self, marathon_server):
+        """
+        This method connects to the marathon server and requests all the
+        Marathon Apps.
+        """
         self.logger.info("Listing apps running on marathon")
         current_marathon_apps = marathon_server.list_apps()
         self.logger.info(current_marathon_apps)
-        print(current_marathon_apps)
 
     def get_marathon_app(self, marathon_server, config_file_data):
-        self.logger.info("Getting app info from the marthon server")
+        """
+        Connects to the Marathon Server using the supplied App ID.
+        If we passed the config file and the App isn't found on the server, we
+        try to create it.
+        If the App name was passed on the command line instead, we will just
+        return with an error if the App wasn't found.
+        """
+        self.logger.info("Getting app info from the marathon server")
         if self.marathon_config_file:
             try:
                 marathon_app_result = marathon_server.get_app(config_file_data["id"])
@@ -122,37 +149,54 @@ class MarathonClientApp(Application):
                 ### App doesn't exist; initialize it
                 self.create_marathon_app(marathon_server, config_file_data)
                 marathon_app_result = marathon_server.get_app(config_file_data["id"])
-        elif self.args.app:
+        elif self.args.get_app:
             try:
                 marathon_app_result = marathon_server.get_app(config_file_data)
             except Exception as e:
                 self.logger.warn("App doesn't exist %s. Exception is %s" % (config_file_data, e))
                 sys.exit(1)
 
-        print(marathon_app_result)
+        self.logger.info(marathon_app_result)
         return marathon_app_result
 
     def update_marathon_app(self, marathon_server, config_file_data, marathon_app_result):
+        """
+        Connects to the Marathon Server and sends the App variables. If the
+        values have changed, the App will be updated on the server, otherwise
+        it makes no changes.
+        """
         ### API call to marathon server to update the app if the values have changed
-        self.logger.info("Update marthon server with updated app data")
+        self.logger.info("Update marathon server with updated app data")
         marathon_server.update_app(config_file_data["id"], marathon_app_result, force=False, minimal=True)
 
     def create_marathon_app(self, marathon_server, config_file_data):
+        """
+        Creates the App name on the Marathon Server with minimal default values.
+        """
         self.logger.info("App wasn't found. Creating new marathon app")
-        print("Creating marathon app.")
         self.logger.info(config_file_data["id"])
 
         ### Initialize app creation and name space
         marathon_server.create_app(config_file_data["id"], MarathonApp(cmd='test', mem=1, cpus=.01))
-        print("Done creating marathon app.")
+        self.logger.info("Done creating marathon app.")
 
     def delete_marathon_app(self, marathon_server, marathon_app):
+        """
+        Connects to the Marathon Server and issues a delete request.
+        """
         self.logger.info("Deleting :")
         self.logger.info(marathon_app)
         marathon_server.delete_app(marathon_app)
-        print("Marathon app deleted.")
+        self.logger.info("Marathon app deleted.")
 
     def run_app(self):
+        """
+        Creates the Marathon Server connection.
+        When using json config files, the tool is used to ensure state of the App.
+        If the App doesn't exist, it tries to create it.
+        This tool can also be used to delete Apps from Marathon via either a
+        json config file or using the App name from the command line.
+        """
         marathon_server = MarathonClient("http://" + self.marathon_host + ":" + self.marathon_port)
 
         ### validate socket connection with given host and port
@@ -176,9 +220,9 @@ class MarathonClientApp(Application):
             ### update a marathon app
             self.update_marathon_app(marathon_server, config_file_data, marathon_app_result)
 
-        elif self.args.app:
-            print(self.args.app)
-            marathon_app_result = self.get_marathon_app(marathon_server, self.args.app)
+        elif self.args.get_app:
+            self.logger.info(self.args.get_app)
+            marathon_app_result = self.get_marathon_app(marathon_server, self.args.get_app)
 
         ### Delete marathon app
         if self.args.delete:
