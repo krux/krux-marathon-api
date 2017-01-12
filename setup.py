@@ -35,7 +35,7 @@ setup(
     install_requires=[],
     entry_points={
         'console_scripts': [
-            'marathon-api = marathon_api.cli:main',
+            'marathon-api = krux_marathon_api.cli:main',
         ],
     },
 )
