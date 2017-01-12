@@ -111,10 +111,12 @@ class MarathonCliApp(Application):
             self.logger.info(self.args.get_app)
             config_file_data = None
             marathon_app_result = self.api.get_marathon_app(marathon_server, config_file_data, self.args.get_app)
+            self.logger.info(marathon_app_result)
 
         ### Delete marathon app
         if self.args.delete:
             self.api.delete_marathon_app(marathon_server, marathon_app_result.id)
+            self.logger.info('Deleting app')
 
 
 def main():
