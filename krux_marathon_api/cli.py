@@ -19,14 +19,14 @@ from marathon.models import MarathonApp
 
 import krux.logging
 from krux.cli import Application, get_group, get_parser
-import marathonapi
+import krux_marathon_api.marathonapi
 
 
 class MarathonCliApp(Application):
 
     def __init__(self):
         super(MarathonCliApp, self).__init__(name='marathon_cli', syslog_facility='local0')
-        self.api = marathonapi.KruxMarathonClient()
+        self.api = krux_marathon_api.marathonapi.KruxMarathonClient()
         self.marathon_host = self.args.host
         self.marathon_port = self.args.port
         self.marathon_list_apps = self.args.list_apps
