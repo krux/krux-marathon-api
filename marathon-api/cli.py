@@ -22,11 +22,11 @@ from krux.cli import Application, get_group, get_parser
 import marathonapi
 
 
-class Marathon_cli_app(Application):
+class MarathonCliApp(Application):
 
     def __init__(self):
-        super(Marathon_cli_app, self).__init__(name='marathon_cli', syslog_facility='local0')
-        self.api = marathonapi.Api()
+        super(MarathonCliApp, self).__init__(name='marathon_cli', syslog_facility='local0')
+        self.api = marathonapi.KruxMarathonClient()
         self.marathon_host = self.args.host
         self.marathon_port = self.args.port
         self.marathon_list_apps = self.args.list_apps
@@ -38,7 +38,7 @@ class Marathon_cli_app(Application):
         """
         Adds command line arguments, these options can be seen using -h when calling the app.
         """
-        super(Marathon_cli_app, self).add_cli_arguments(parser)
+        super(MarathonCliApp, self).add_cli_arguments(parser)
         group = get_group(parser, self.name)
 
         group.add_argument(
@@ -52,18 +52,18 @@ class Marathon_cli_app(Application):
             help='Marathon server port. ',
         )
         group.add_argument(
-            '--list_apps',
+            '--list-apps',
             action='store_true',
             default=False,
             help='Use flag to list all marathon apps. ',
         )
         group.add_argument(
-            '--config_file',
+            '--config-file',
             default=False,
             help='Marathon config file to configure app. ',
         )
         group.add_argument(
-            '--get_app',
+            '--get-app',
             default=False,
             help='app flag can be used to pass an app name to get '
             'more detailed info on a running app ',
@@ -118,7 +118,7 @@ class Marathon_cli_app(Application):
 
 
 def main():
-    app = Marathon_cli_app()
+    app = MarathonCliApp()
     app.run_app()
 
 # Run the application stand alone

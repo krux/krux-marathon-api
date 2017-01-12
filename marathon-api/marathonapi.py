@@ -24,12 +24,12 @@ import krux.logging
 from krux.cli import Application, get_group, get_parser
 
 
-class Api(object):
+class KruxMarathonClient(object):
     #VERSION = 0.1
 
     def __init__(self):
 
-        NAME = 'marathon_api'
+        NAME = 'KruxMarathonClient'
         self.logger = krux.logging.get_logger(name=NAME)
 
     def connect(self, address, port):
