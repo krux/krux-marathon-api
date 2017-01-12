@@ -22,10 +22,10 @@ from krux.cli import Application, get_group, get_parser
 import marathonapi
 
 
-class MarathonClientApp(Application):
+class Marathon_cli_app(Application):
 
     def __init__(self):
-        super(MarathonClientApp, self).__init__(name='marathonclientapp', syslog_facility='local0')
+        super(Marathon_cli_app, self).__init__(name='marathon_cli', syslog_facility='local0')
         self.api = marathonapi.Api()
         self.marathon_host = self.args.host
         self.marathon_port = self.args.port
@@ -38,7 +38,7 @@ class MarathonClientApp(Application):
         """
         Adds command line arguments, these options can be seen using -h when calling the app.
         """
-        super(MarathonClientApp, self).add_cli_arguments(parser)
+        super(Marathon_cli_app, self).add_cli_arguments(parser)
         group = get_group(parser, self.name)
 
         group.add_argument(
@@ -90,7 +90,8 @@ class MarathonClientApp(Application):
 
         ### list all apps if flag is called
         if self.marathon_list_apps:
-            self.api.list_marathon_apps(marathon_server)
+            current_marathon_apps = self.api.list_marathon_apps(marathon_server)
+            self.logger.info(current_marathon_apps)
 
         ### Config file load, only if we passed the variable
         if self.marathon_config_file:
@@ -98,6 +99,7 @@ class MarathonClientApp(Application):
 
             ### get a specific marathon app
             marathon_app_result = self.api.get_marathon_app(marathon_server, config_file_data, config_file_data["id"])
+            self.logger.info(marathon_app_result)
 
             ### update app data variable with config file values
             self.api.assign_config_data(config_file_data, marathon_app_result)
@@ -116,7 +118,7 @@ class MarathonClientApp(Application):
 
 
 def main():
-    app = MarathonClientApp()
+    app = Marathon_cli_app()
     app.run_app()
 
 # Run the application stand alone

@@ -29,7 +29,7 @@ class Api(object):
 
     def __init__(self):
 
-        NAME = 'marathonapi'
+        NAME = 'marathon_api'
         self.logger = krux.logging.get_logger(name=NAME)
 
     def connect(self, address, port):
@@ -102,7 +102,7 @@ class Api(object):
         """
         self.logger.info("Listing apps running on marathon")
         current_marathon_apps = marathon_server.list_apps()
-        self.logger.info(current_marathon_apps)
+        return current_marathon_apps
 
     def get_marathon_app(self, marathon_server, config_file_data, app_id):
         """
@@ -130,7 +130,6 @@ class Api(object):
                 self.logger.warn("App doesn't exist %s. Exception is %s" % (app_id, e))
                 sys.exit(1)
 
-        self.logger.info(marathon_app_result)
         return marathon_app_result
 
     def update_marathon_app(self, marathon_server, config_file_data, marathon_app_result):
@@ -140,6 +139,8 @@ class Api(object):
         it makes no changes.
         """
         ### API call to marathon server to update the app if the values have changed
+        ### The Marathon package and server API does verification of data so no
+        ### reason to recheck here.
         self.logger.info("Update marathon server with updated app data")
         marathon_server.update_app(config_file_data["id"], marathon_app_result, force=False, minimal=True)
 
