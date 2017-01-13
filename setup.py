@@ -11,7 +11,7 @@ Package setup for krux-marathon-api
 from __future__ import absolute_import
 from setuptools import setup, find_packages
 
-VERSION = '0.0.1'
+from krux_marathon_api import VERSION
 
 # URL to the repository on Github.
 REPO_URL = 'https://github.com/krux/krux-marathon-api'

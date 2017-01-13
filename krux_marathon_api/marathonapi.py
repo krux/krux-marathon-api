@@ -38,16 +38,15 @@ class KruxMarathonClient(object):
         If the values weren't passed on the command line, defaults will be used.
         If the connection fails, the program will stop and exit with a value of 1.
         """
-        self.logger.info("Testing connection to marathon server")
-        self.logger.info('host = ' + address)
-        self.logger.info('port = ' + str(port))
-
+        self.logger.info('Testing connection to marathon server\nhost = ' + address + '\nport = ' + str(port))
         try:
             s = socket.socket()
             s.connect((address, port))
+            return True
         except Exception as e:
-            self.logger.error("something's wrong with %s:%d. Exception is %s" % (address, port, e))
-            sys.exit(1)
+            self.logger.error("something's wrong with %s:%d. Exception is %s", (address, port, e))
+            return False
+            #sys.exit(1)
         finally:
             s.close()
 
@@ -56,14 +55,13 @@ class KruxMarathonClient(object):
         Open the json file passed on the command line. The program will stop and
         exit with a value of 1 if it cannot open or parse the json file.
         """
-        self.logger.info("Reading config file and formatting data.")
-        self.logger.info(config_file)
+        self.logger.info("Reading config file and formatting data from config file :  " + config_file)
         ### open and load json config file
         try:
             with open(config_file) as data_file:
                 data = json.load(data_file)
         except Exception as e:
-            self.logger.error("Error in json file:  %s. Exception is %s" % (config_file, e))
+            self.logger.error("Error in json file:  %s. Exception is %s", (config_file, e))
             sys.exit(1)
         return data
 
@@ -102,6 +100,7 @@ class KruxMarathonClient(object):
         """
         self.logger.info("Listing apps running on marathon")
         current_marathon_apps = marathon_server.list_apps()
+        self.logger.debug(current_marathon_apps)
         return current_marathon_apps
 
     def get_marathon_app(self, marathon_server, config_file_data, app_id):
@@ -119,7 +118,7 @@ class KruxMarathonClient(object):
             try:
                 marathon_app_result = marathon_server.get_app(app_id)
             except Exception as e:
-                self.logger.warn("App doesn't exist %s. Exception is %s" % (app_id, e))
+                self.logger.warn("App doesn't exist %s. Exception is %s", (app_id, e))
                 ### App doesn't exist; initialize it
                 self.create_marathon_app(marathon_server, config_file_data)
                 marathon_app_result = marathon_server.get_app(config_file_data["id"])
@@ -127,9 +126,8 @@ class KruxMarathonClient(object):
             try:
                 marathon_app_result = marathon_server.get_app(app_id)
             except Exception as e:
-                self.logger.warn("App doesn't exist %s. Exception is %s" % (app_id, e))
+                self.logger.warn("App doesn't exist %s. Exception is %s", (app_id, e))
                 sys.exit(1)
-
         return marathon_app_result
 
     def update_marathon_app(self, marathon_server, config_file_data, marathon_app_result):

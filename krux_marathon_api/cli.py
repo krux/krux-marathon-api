@@ -5,6 +5,7 @@
 #
 
 from __future__ import absolute_import
+import sys
 
 #
 # Third party libraries
@@ -86,7 +87,11 @@ class MarathonCliApp(Application):
         marathon_server = MarathonClient("http://" + self.marathon_host + ":" + self.marathon_port)
 
         ### validate socket connection with given host and port
-        self.api.connect(self.marathon_host, int(self.marathon_port))
+        if self.api.connect(self.marathon_host, int(self.marathon_port)):
+            self.logger.info('Connection success')
+        else:
+            self.logger.error('Error connecting to Server')
+            sys.exit(1)
 
         ### list all apps if flag is called
         if self.marathon_list_apps:
