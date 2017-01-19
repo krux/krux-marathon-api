@@ -140,7 +140,7 @@ class KruxMarathonClient(object):
         ### The Marathon package and server API does verification of data so no
         ### reason to recheck here.
         self.logger.info("Update marathon server with updated app data")
-        marathon_server.update_app(config_file_data["id"], marathon_app_result, force=False, minimal=True)
+        marathon_server.update_app(config_file_data["id"], marathon_app_result, force=True, minimal=True)
 
     def create_marathon_app(self, marathon_server, config_file_data):
         """
