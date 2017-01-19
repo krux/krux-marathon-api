@@ -139,6 +139,7 @@ class KruxMarathonClient(object):
         ### API call to marathon server to update the app if the values have changed
         ### The Marathon package and server API does verification of data so no
         ### reason to recheck here.
+        ### An app can be stuck in a scaling state, force=True keeps us from getting hung.
         self.logger.info("Update marathon server with updated app data")
         marathon_server.update_app(config_file_data["id"], marathon_app_result, force=True, minimal=True)
 
