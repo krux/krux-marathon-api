@@ -72,6 +72,7 @@ class KruxMarathonClient(object):
         """
         ### assigning values from json to our marathon app
         self.logger.info("Assigning json variables to app data")
+        self.logger.debug("Config file data: {}".format(config_file_data))
         marathon_app_result.cpus                     = config_file_data["cpus"]
         marathon_app_result.mem                      = config_file_data["mem"]
         marathon_app_result.instances                = config_file_data["instances"]
@@ -89,17 +90,18 @@ class KruxMarathonClient(object):
         ### If you define ports then blank the port definitions, but if you define
         ### port_definitions they override ports, since port_definitions are more
         ### specific (i.e. protocol and etc)
-        if "ports" in config_file_data:
+        if config_file_data.get("ports"):
             marathon_app_result.ports                = config_file_data["ports"]
-            marathon_app_result.port_definitions     = []
-        if "port_definitions" in config_file_data:
+            marathon_app_result.port_definitions     = None
+        if config_file_data.get("port_definitions"):
             marathon_app_result.port_definitions     = config_file_data["port_definitions"]
-            marathon_app_result.port                 = []
+            marathon_app_result.ports                = None
         marathon_app_result.require_ports            = config_file_data["require_ports"]
         marathon_app_result.store_urls               = config_file_data["store_urls"]
         marathon_app_result.upgrade_strategy         = config_file_data["upgrade_strategy"]
         marathon_app_result.uris                     = config_file_data["uris"]
         marathon_app_result.user                     = config_file_data["user"]                 #updates confirmed
+        self.logger.debug("Marathon app object: {}".format(marathon_app_result))
 
     def list_marathon_apps(self, marathon_server):
         """
