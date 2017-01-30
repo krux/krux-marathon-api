@@ -86,7 +86,15 @@ class KruxMarathonClient(object):
         marathon_app_result.health_checks            = config_file_data["health_checks"]
         marathon_app_result.labels                   = config_file_data["labels"]
         marathon_app_result.max_launch_delay_seconds = config_file_data["max_launch_delay_seconds"]
-        #marathon_app_result.ports = config_file_data["ports"]      # You cannot specify both ports and port definitions
+        ### If you define ports then blank the port definitions, but if you define
+        ### port_definitions they override ports, since port_definitions are more
+        ### specific (i.e. protocol and etc)
+        if "ports" in config_file_data:
+            marathon_app_result.ports                = config_file_data["ports"]
+            marathon_app_result.port_definitions     = []
+        if "port_definitions" in config_file_data:
+            marathon_app_result.port_definitions     = config_file_data["port_definitions"]
+            marathon_app_result.port                 = []
         marathon_app_result.require_ports            = config_file_data["require_ports"]
         marathon_app_result.store_urls               = config_file_data["store_urls"]
         marathon_app_result.upgrade_strategy         = config_file_data["upgrade_strategy"]
