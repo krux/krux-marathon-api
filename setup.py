@@ -38,4 +38,5 @@ setup(
             'marathon-api = krux_marathon_api.cli:main',
         ],
     },
+    zip_safe=False,  # Don't install a single .egg file, it's harder to debug
 )
