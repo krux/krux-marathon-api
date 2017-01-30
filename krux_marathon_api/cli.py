@@ -5,6 +5,7 @@
 #
 
 from __future__ import absolute_import
+import os
 import sys
 
 #
@@ -12,7 +13,6 @@ import sys
 #
 
 from marathon import MarathonClient
-from marathon.models import MarathonApp
 
 #
 # Internal libraries
@@ -31,7 +31,11 @@ class MarathonCliApp(Application):
         self.marathon_host = self.args.host
         self.marathon_port = self.args.port
         self.marathon_list_apps = self.args.list_apps
-        self.marathon_config_file = self.args.config_file
+        ### Handles files passed via i.e. ~/some-link.json and it will translate
+        ### to the proper full location
+        self.marathon_config_file = os.path.realpath(
+            os.path.expanduser(self.args.config_file)
+        )
         self.marathon_get_app = self.args.get_app
         self.marathon_delete = self.args.delete
 
@@ -91,7 +95,7 @@ class MarathonCliApp(Application):
             self.logger.info('Connection success')
         else:
             self.logger.error('Error connecting to Server')
-            sys.exit(1)
+            raise IOError('Error connecting to Server')
 
         ### list all apps if flag is called
         if self.marathon_list_apps:
@@ -126,7 +130,7 @@ class MarathonCliApp(Application):
 
 def main():
     app = MarathonCliApp()
-    app.run_app()
+    sys.exit(app.run_app())
 
 # Run the application stand alone
 if __name__ == '__main__':
