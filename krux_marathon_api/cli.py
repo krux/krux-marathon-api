@@ -33,9 +33,12 @@ class MarathonCliApp(Application):
         self.marathon_list_apps = self.args.list_apps
         ### Handles files passed via i.e. ~/some-link.json and it will translate
         ### to the proper full location
-        self.marathon_config_file = os.path.realpath(
-            os.path.expanduser(self.args.config_file)
-        )
+        if self.args.config_file:
+            self.marathon_config_file = os.path.realpath(
+                os.path.expanduser(self.args.config_file)
+            )
+        else:
+            self.marathon_config_file = self.args.config_file
         self.marathon_get_app = self.args.get_app
         self.marathon_delete = self.args.delete
 
