@@ -31,9 +31,9 @@ class MarathonCliApp(Application):
         self.marathon_host = self.args.host
         self.marathon_port = self.args.port
         self.marathon_list_apps = self.args.list_apps
-        ### Handles files passed via i.e. ~/some-link.json and it will translate
-        ### to the proper full location
         if self.args.config_file:
+            ### Handles files passed via i.e. ~/some-link.json and it will translate
+            ### to the proper full location
             self.marathon_config_file = os.path.realpath(
                 os.path.expanduser(self.args.config_file)
             )
@@ -67,7 +67,7 @@ class MarathonCliApp(Application):
         )
         group.add_argument(
             '--config-file',
-            default=False,
+            default=None,
             help='Marathon config file to configure app. ',
         )
         group.add_argument(
