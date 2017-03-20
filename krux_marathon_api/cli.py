@@ -127,7 +127,6 @@ class MarathonCliApp(Application):
             config_file_data = None
             marathon_app_result = self.api.get_marathon_app(marathon_server, config_file_data, self.args.get_app)
             self.logger.info(marathon_app_result)
-            self.logger.info(hashlib.sha224(str(marathon_app_result)).hexdigest())
 
         ### Delete marathon app
         if self.args.delete:
