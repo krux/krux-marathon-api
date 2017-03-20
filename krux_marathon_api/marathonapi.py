@@ -25,8 +25,6 @@ from krux.cli import Application, get_group, get_parser
 
 
 class KruxMarathonClient(object):
-    #VERSION = 0.1
-
     def __init__(self):
 
         NAME = 'KruxMarathonClient'
@@ -66,42 +64,41 @@ class KruxMarathonClient(object):
         return data
 
     def assign_config_data(self, config_file_data, marathon_app_result):
-        """
-        Assign variables from the config file to the marathon app values.
-        We cannot use a dymnamic variable so we are assigning these one at a time.
-        """
-        ### assigning values from json to our marathon app
-        self.logger.info("Assigning json variables to app data")
-        self.logger.debug("Config file data: {}".format(config_file_data))
-        marathon_app_result.cpus                     = config_file_data["cpus"]
-        marathon_app_result.mem                      = config_file_data["mem"]
-        marathon_app_result.instances                = config_file_data["instances"]
-        marathon_app_result.disk                     = config_file_data["disk"]
-        marathon_app_result.cmd                      = config_file_data["cmd"]
-        marathon_app_result.backoff_factor           = config_file_data["backoff_factor"]
-        marathon_app_result.constraints              = config_file_data["constraints"]
-        marathon_app_result.container                = config_file_data["container"]
-        marathon_app_result.dependencies             = config_file_data["dependencies"]
-        marathon_app_result.env                      = config_file_data["env"]
-        marathon_app_result.executor                 = config_file_data["executor"]
-        marathon_app_result.health_checks            = config_file_data["health_checks"]
-        marathon_app_result.labels                   = config_file_data["labels"]
-        marathon_app_result.max_launch_delay_seconds = config_file_data["max_launch_delay_seconds"]
-        ### If you define ports then blank the port definitions, but if you define
-        ### port_definitions they override ports, since port_definitions are more
-        ### specific (i.e. protocol and etc)
-        if config_file_data.get("ports"):
-            marathon_app_result.ports                = config_file_data["ports"]
-            marathon_app_result.port_definitions     = None
-        if config_file_data.get("port_definitions"):
-            marathon_app_result.port_definitions     = config_file_data["port_definitions"]
-            marathon_app_result.ports                = None
-        marathon_app_result.require_ports            = config_file_data["require_ports"]
-        marathon_app_result.store_urls               = config_file_data["store_urls"]
-        marathon_app_result.upgrade_strategy         = config_file_data["upgrade_strategy"]
-        marathon_app_result.uris                     = config_file_data["uris"]
-        marathon_app_result.user                     = config_file_data["user"]                 #updates confirmed
-        self.logger.debug("Marathon app object: {}".format(marathon_app_result))
+        ### value for if there is a change in our json file from server values
+        changes_in_json = False
+
+        ### iterate through our json file's values and compare them to the values
+        ### on the marathon server
+        for attribute, value in config_file_data.iteritems():
+            ### upgrade_strategy value returns a class an not a json, extra work
+            ### needs to be done to convert this to a comparable value
+            if attribute == 'upgrade_strategy':
+                ### the marathon api allows us to convert this attribute to json
+                marathon_app_result_original = getattr(marathon_app_result, attribute).to_json()
+                value_json = json.dumps(value)
+                if marathon_app_result_original == value_json:
+                    #print attribute, ': ', marathon_app_result_original, ' is equal to ', value_json
+                    pass
+                else:
+                    changes_in_json = True
+                    setattr(marathon_app_result, attribute, value)
+                    print 'Updating ', attribute, ' from \n', marathon_app_result_original, '\nto \n', value_json
+            else:
+                marathon_app_result_original = getattr(marathon_app_result, attribute)
+                if marathon_app_result_original == value:
+                    #print attribute, ': ', marathon_app_result_original, ' is equal to ', value
+                    pass
+                else:
+                    changes_in_json = True
+                    setattr(marathon_app_result, attribute, value)
+                    print 'Updating ', attribute, ' from \n', marathon_app_result_original, '\nto \n', value
+
+        ### ports and port_definitions don't play nicely together, if both are
+        ### set, then use the more specific port_definitions and log a warning
+        if config_file_data.get("ports") and config_file_data.get("port_definitions"):
+            marathon_app_result.ports = None
+            self.logger.warn('both ports and port_definitions are set, using port_definitions')
+        return changes_in_json
 
     def list_marathon_apps(self, marathon_server):
         """
@@ -138,6 +135,10 @@ class KruxMarathonClient(object):
             except Exception as e:
                 self.logger.warn("App doesn't exist %s. Exception is %s", app_id, e)
                 sys.exit(1)
+        #self.logger.info(hashlib.sha224(str(marathon_app_result)).hexdigest())
+        #ch = json.loads(marathon_app_result.to_json())
+        #self.logger.info(ch)
+
         return marathon_app_result
 
     def update_marathon_app(self, marathon_server, config_file_data, marathon_app_result):
