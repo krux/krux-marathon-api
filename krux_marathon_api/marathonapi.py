@@ -77,21 +77,21 @@ class KruxMarathonClient(object):
                 marathon_app_result_original = getattr(marathon_app_result, attribute).to_json()
                 value_json = json.dumps(value)
                 if marathon_app_result_original == value_json:
-                    #print attribute, ': ', marathon_app_result_original, ' is equal to ', value_json
+                    self.logger.info(attribute, ': ', marathon_app_result_original, ' is equal to ', value_json)
                     pass
                 else:
                     changes_in_json = True
                     setattr(marathon_app_result, attribute, value)
-                    print 'Updating ', attribute, ' from \n', marathon_app_result_original, '\nto \n', value_json
+                    self.logger.info('Updating ', attribute, ' from \n', marathon_app_result_original, '\nto \n', value_json)
             else:
                 marathon_app_result_original = getattr(marathon_app_result, attribute)
                 if marathon_app_result_original == value:
-                    #print attribute, ': ', marathon_app_result_original, ' is equal to ', value
+                    self.logger.info(attribute, ': ', marathon_app_result_original, ' is equal to ', value)
                     pass
                 else:
                     changes_in_json = True
                     setattr(marathon_app_result, attribute, value)
-                    print 'Updating ', attribute, ' from \n', marathon_app_result_original, '\nto \n', value
+                    self.logger.info('Updating ', attribute, ' from \n', marathon_app_result_original, '\nto \n', value)
 
         ### ports and port_definitions don't play nicely together, if both are
         ### set, then use the more specific port_definitions and log a warning
