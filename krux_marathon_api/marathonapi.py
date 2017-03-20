@@ -135,10 +135,6 @@ class KruxMarathonClient(object):
             except Exception as e:
                 self.logger.warn("App doesn't exist %s. Exception is %s", app_id, e)
                 sys.exit(1)
-        #self.logger.info(hashlib.sha224(str(marathon_app_result)).hexdigest())
-        #ch = json.loads(marathon_app_result.to_json())
-        #self.logger.info(ch)
-
         return marathon_app_result
 
     def update_marathon_app(self, marathon_server, config_file_data, marathon_app_result):

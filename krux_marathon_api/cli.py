@@ -111,14 +111,15 @@ class MarathonCliApp(Application):
 
             ### get a specific marathon app
             marathon_app_result = self.api.get_marathon_app(marathon_server, config_file_data, config_file_data["id"])
-            #self.logger.info(marathon_app_result)
+            self.logger.info('marathon app before updates: ')
+            self.logger.info(marathon_app_result)
 
             ### update local app data variable with config file values
             changes_in_json = self.api.assign_config_data(config_file_data, marathon_app_result)
-            self.logger.info(marathon_app_result)
 
             ### update a marathon app if there was a change in the json file
             if changes_in_json:
+                self.logger.info('marathon app after updates: ')
                 self.api.update_marathon_app(marathon_server, config_file_data, marathon_app_result)
 
         elif self.args.get_app:
