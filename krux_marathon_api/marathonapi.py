@@ -13,6 +13,7 @@ import json
 # Third party libraries
 #
 
+import marathon
 from marathon import MarathonClient
 from marathon.models import MarathonApp
 
@@ -70,28 +71,29 @@ class KruxMarathonClient(object):
         ### iterate through our json file's values and compare them to the values
         ### on the marathon server
         for attribute, value in config_file_data.iteritems():
+            marathon_app_result_original = getattr(marathon_app_result, attribute)
             ### upgrade_strategy value returns a class an not a json, extra work
             ### needs to be done to convert this to a comparable value
-            if attribute == 'upgrade_strategy':
+            if isinstance(marathon_app_result_original, marathon.models.app.MarathonUpgradeStrategy):
                 ### the marathon api allows us to convert this attribute to json
                 marathon_app_result_original = getattr(marathon_app_result, attribute).to_json()
                 value_json = json.dumps(value)
                 if marathon_app_result_original == value_json:
-                    self.logger.info(attribute, ': ', marathon_app_result_original, ' is equal to ', value_json)
+                    self.logger.debug("%s: %s is equal to %s" % (attribute, marathon_app_result_original, value_json))
                     pass
                 else:
                     changes_in_json = True
                     setattr(marathon_app_result, attribute, value)
-                    self.logger.info('Updating ', attribute, ' from \n', marathon_app_result_original, '\nto \n', value_json)
+                    self.logger.info("Updating %s from \n %s \nto \n %s" % (attribute, marathon_app_result_original, value_json))
             else:
                 marathon_app_result_original = getattr(marathon_app_result, attribute)
                 if marathon_app_result_original == value:
-                    self.logger.info(attribute, ': ', marathon_app_result_original, ' is equal to ', value)
+                    self.logger.debug("%s: %s is equal to %s" % (attribute, marathon_app_result_original, value))
                     pass
                 else:
                     changes_in_json = True
                     setattr(marathon_app_result, attribute, value)
-                    self.logger.info('Updating ', attribute, ' from \n', marathon_app_result_original, '\nto \n', value)
+                    self.logger.info("Updating %s from \n %s \nto \n %s" % (attribute, marathon_app_result_original, value))
 
         ### ports and port_definitions don't play nicely together, if both are
         ### set, then use the more specific port_definitions and log a warning

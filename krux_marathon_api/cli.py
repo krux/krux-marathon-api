@@ -138,6 +138,7 @@ def main():
     app = MarathonCliApp()
     sys.exit(app.run_app())
 
+
 # Run the application stand alone
 if __name__ == '__main__':
     main()
