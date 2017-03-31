@@ -85,6 +85,18 @@ class KruxMarathonClient(object):
                     changes_in_json = True
                     setattr(marathon_app_result, attribute, value)
                     self.logger.info("Updating %s from \n %s \nto \n %s" % (attribute, marathon_app_result_original, value_json))
+            ### constraints and health_checks are special cases; the marathon api returns a list containing a class
+            ### let's iterate through the list and format the value of the list into
+            ### something we can actually compare to our json file
+            elif attribute == 'constraints' or attribute == 'health_checks':
+                marathon_app_result_original = getattr(marathon_app_result, attribute)
+                for i, list_val in enumerate(value):
+                    if list_val == marathon_app_result_original[i].json_repr():
+                        self.logger.debug("%s: %s is equal to %s" % (attribute, marathon_app_result_original[i].json_repr(), list_val))
+                    else:
+                        changes_in_json = True
+                        setattr(marathon_app_result, attribute, value)
+                        self.logger.info("Updating %s from \n %s \nto \n %s" % (attribute, marathon_app_result_original, value_json))
             else:
                 marathon_app_result_original = getattr(marathon_app_result, attribute)
                 if marathon_app_result_original == value:
