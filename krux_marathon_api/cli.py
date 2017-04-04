@@ -64,12 +64,12 @@ class MarathonCliApp(Application):
         group.add_argument(
             '--username',
             default=os.getenv('MARATHON_HTTP_USERNAME'),
-            help='Marathon server username (if needed)'
+            help='Marathon server username (default: %(default)s)'
         )
         group.add_argument(
             '--password',
             default=os.getenv('MARATHON_HTTP_PASSWORD'),
-            help='Marathon server password (if needed)'
+            help='Marathon server password (default: %(default)s)'
         )
         group.add_argument(
             '--list-apps',
