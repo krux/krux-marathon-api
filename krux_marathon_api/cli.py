@@ -30,6 +30,8 @@ class MarathonCliApp(Application):
         self.api = krux_marathon_api.marathonapi.KruxMarathonClient()
         self.marathon_host = self.args.host
         self.marathon_port = self.args.port
+        self.marathon_user = self.args.username
+        self.marathon_pass = self.args.password
         self.marathon_list_apps = self.args.list_apps
         if self.args.config_file:
             ### Handles files passed via i.e. ~/some-link.json and it will translate
@@ -58,6 +60,14 @@ class MarathonCliApp(Application):
             '--port',
             default='8080',
             help='Marathon server port. ',
+        )
+        group.add_argument(
+            '--username',
+            help='Marathon server username (if needed)'
+        )
+        group.add_argument(
+            '--password',
+            help='Marathon server password (if needed)'
         )
         group.add_argument(
             '--list-apps',
@@ -91,7 +101,12 @@ class MarathonCliApp(Application):
         This tool can also be used to delete Apps from Marathon via either a
         json config file or using the App name from the command line.
         """
-        marathon_server = MarathonClient("http://" + self.marathon_host + ":" + self.marathon_port)
+        server_str = "http://" + self.marathon_host + ":" + self.marathon_port
+        marathon_server = MarathonClient(
+            server_str,
+            username=self.marathon_user,
+            password=self.marathon_pass,
+        )
 
         ### validate socket connection with given host and port
         if self.api.connect(self.marathon_host, int(self.marathon_port)):
