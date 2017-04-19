@@ -121,6 +121,8 @@ class MarathonCliApp(Application):
         if self.marathon_list_apps:
             current_marathon_apps = self.api.list_marathon_apps(marathon_server)
             self.logger.info(current_marathon_apps)
+            for app in current_marathon_apps:
+                print repr(app)
 
         ### Config file load, only if we passed the variable
         if self.marathon_config_file:
