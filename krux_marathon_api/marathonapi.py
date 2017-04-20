@@ -13,8 +13,6 @@ import json
 # Third party libraries
 #
 
-import marathon
-from marathon import MarathonClient
 from marathon.models import MarathonApp
 
 #
@@ -22,7 +20,6 @@ from marathon.models import MarathonApp
 #
 
 import krux.logging
-from krux.cli import Application, get_group, get_parser
 
 
 class KruxMarathonClient(object):

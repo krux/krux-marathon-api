@@ -18,8 +18,7 @@ from marathon import MarathonClient
 # Internal libraries
 #
 
-import krux.logging
-from krux.cli import Application, get_group, get_parser
+from krux.cli import Application, get_group
 import krux_marathon_api.marathonapi
 
 
