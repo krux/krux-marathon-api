@@ -102,6 +102,18 @@ class MarathonCliApp(Application):
         This tool can also be used to delete Apps from Marathon via either a
         json config file or using the App name from the command line.
         """
+
+        ### if not a single modifier is specified, show the usage string instead
+        ### of segfaulting
+        if not any([
+            self.args.list_apps,
+            self.args.config_file,
+            self.args.get_app,
+            self.args.delete,
+        ]):
+            self.parser.print_help()
+            self.parser.exit()
+
         server_str = "http://" + self.marathon_host + ":" + self.marathon_port
         marathon_server = MarathonClient(
             server_str,
