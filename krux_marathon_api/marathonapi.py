@@ -68,10 +68,17 @@ class KruxMarathonClient(object):
         ### iterate through the values that are OK to update (according to marathon-python)
         ### and if there are changes flip the changes flag
         new_object = MarathonApp().from_json(new_data)
-        for k in sorted(MarathonApp.UPDATE_OK_ATTRIBUTES):
+        check_attrs = MarathonApp.UPDATE_OK_ATTRIBUTES
+        ### strip the version because that one changes every time
+        if 'version' in check_attrs:
+            check_attrs.remove('version')
+        ### Not sure why gpus get defaulted to None, re-setting to 0
+        if not new_object.gpus:
+            new_object.gpus = 0
+        for k in sorted(check_attrs):
             ### Try to fetch attributes from both objects
-            new_attr = getattr(new_object, k, None)
-            old_attr = getattr(old_object, k, None)
+            new_attr = getattr(new_object, k)
+            old_attr = getattr(old_object, k)
             if new_attr == old_attr:
                 self.logger.debug("%s: <<%s>> is equal to <<%s>>" % (k, old_attr, new_attr))
             else:
