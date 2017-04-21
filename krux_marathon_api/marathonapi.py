@@ -13,8 +13,6 @@ import json
 # Third party libraries
 #
 
-import marathon
-from marathon import MarathonClient
 from marathon.models import MarathonApp
 
 #
@@ -22,7 +20,6 @@ from marathon.models import MarathonApp
 #
 
 import krux.logging
-from krux.cli import Application, get_group, get_parser
 
 
 class KruxMarathonClient(object):
@@ -64,55 +61,37 @@ class KruxMarathonClient(object):
             sys.exit(1)
         return data
 
-    def assign_config_data(self, config_file_data, marathon_app_result):
+    def assign_config_data(self, new_data, old_object):
         ### value for if there is a change in our json file from server values
         changes_in_json = False
 
-        ### iterate through our json file's values and compare them to the values
-        ### on the marathon server
-        for attribute, value in config_file_data.iteritems():
-            marathon_app_result_original = getattr(marathon_app_result, attribute)
-            ### upgrade_strategy value returns a class an not a json, extra work
-            ### needs to be done to convert this to a comparable value
-            if isinstance(marathon_app_result_original, marathon.models.app.MarathonUpgradeStrategy):
-                ### the marathon api allows us to convert this attribute to json
-                marathon_app_result_original = getattr(marathon_app_result, attribute).to_json()
-                value_json = json.dumps(value)
-                if marathon_app_result_original == value_json:
-                    self.logger.debug("%s: %s is equal to %s" % (attribute, marathon_app_result_original, value_json))
-                    pass
-                else:
-                    changes_in_json = True
-                    setattr(marathon_app_result, attribute, value)
-                    self.logger.info("Updating %s from \n %s \nto \n %s" % (attribute, marathon_app_result_original, value_json))
-            ### constraints and health_checks are special cases; the marathon api returns a list containing a class
-            ### let's iterate through the list and format the value of the list into
-            ### something we can actually compare to our json file
-            elif attribute == 'constraints' or attribute == 'health_checks':
-                marathon_app_result_original = getattr(marathon_app_result, attribute)
-                for i, list_val in enumerate(value):
-                    if list_val == marathon_app_result_original[i].json_repr():
-                        self.logger.debug("%s: %s is equal to %s" % (attribute, marathon_app_result_original[i].json_repr(), list_val))
-                    else:
-                        changes_in_json = True
-                        setattr(marathon_app_result, attribute, value)
-                        self.logger.info("Updating %s from \n %s \nto \n %s" % (attribute, marathon_app_result_original, value_json))
+        ### iterate through the values that are OK to update (according to marathon-python)
+        ### and if there are changes flip the changes flag
+        new_object = MarathonApp().from_json(new_data)
+        check_attrs = MarathonApp.UPDATE_OK_ATTRIBUTES
+        ### strip the version because that one changes every time
+        if 'version' in check_attrs:
+            check_attrs.remove('version')
+        ### Not sure why gpus get defaulted to None, re-setting to 0
+        if not new_object.gpus:
+            new_object.gpus = 0
+        for k in sorted(check_attrs):
+            ### Try to fetch attributes from both objects
+            new_attr = getattr(new_object, k)
+            old_attr = getattr(old_object, k)
+            if new_attr == old_attr:
+                self.logger.debug("%s: <<%s>> is equal to <<%s>>" % (k, old_attr, new_attr))
             else:
-                marathon_app_result_original = getattr(marathon_app_result, attribute)
-                if marathon_app_result_original == value:
-                    self.logger.debug("%s: %s is equal to %s" % (attribute, marathon_app_result_original, value))
-                    pass
-                else:
-                    changes_in_json = True
-                    setattr(marathon_app_result, attribute, value)
-                    self.logger.info("Updating %s from \n %s \nto \n %s" % (attribute, marathon_app_result_original, value))
-
-        ### ports and port_definitions don't play nicely together, if both are
-        ### set, then use the more specific port_definitions and log a warning
-        if config_file_data.get("ports") and config_file_data.get("port_definitions"):
-            marathon_app_result.ports = None
-            self.logger.warn('both ports and port_definitions are set, using port_definitions')
-        return changes_in_json
+                self.logger.debug("%s: updating <<%s>> to <<%s>>" % (k, old_attr, new_attr))
+                ### if at least one attribute changes, flip the flag
+                changes_in_json = True
+        ### special case for ports: if you send both to the marathon api, it will return a 500,
+        ### so you gotta pick one over the other. Usually the port_definitions will be more
+        ### complete, so that's what we're going with.
+        if getattr(new_object, 'port_definitions', None) and getattr(new_object, 'ports', None):
+            self.logger.warn('Both port and port_definitions are set, using port_definitions only')
+            new_object.ports = []
+        return changes_in_json, new_object
 
     def list_marathon_apps(self, marathon_server):
         """

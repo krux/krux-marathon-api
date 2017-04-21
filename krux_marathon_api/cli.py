@@ -18,8 +18,7 @@ from marathon import MarathonClient
 # Internal libraries
 #
 
-import krux.logging
-from krux.cli import Application, get_group, get_parser
+from krux.cli import Application, get_group
 import krux_marathon_api.marathonapi
 
 
@@ -103,6 +102,18 @@ class MarathonCliApp(Application):
         This tool can also be used to delete Apps from Marathon via either a
         json config file or using the App name from the command line.
         """
+
+        ### if not a single modifier is specified, show the usage string instead
+        ### of segfaulting
+        if not any([
+            self.args.list_apps,
+            self.args.config_file,
+            self.args.get_app,
+            self.args.delete,
+        ]):
+            self.parser.print_help()
+            self.parser.exit()
+
         server_str = "http://" + self.marathon_host + ":" + self.marathon_port
         marathon_server = MarathonClient(
             server_str,
@@ -132,12 +143,12 @@ class MarathonCliApp(Application):
             self.logger.info(marathon_app_result)
 
             ### update local app data variable with config file values
-            changes_in_json = self.api.assign_config_data(config_file_data, marathon_app_result)
+            changes_in_json, new_marathon_app = self.api.assign_config_data(config_file_data, marathon_app_result)
 
             ### update a marathon app if there was a change in the json file
             if changes_in_json:
                 self.logger.info('marathon app after updates: ')
-                self.api.update_marathon_app(marathon_server, config_file_data, marathon_app_result)
+                self.api.update_marathon_app(marathon_server, config_file_data, new_marathon_app)
 
         elif self.args.get_app:
             self.logger.info(self.args.get_app)
