@@ -93,7 +93,7 @@ class KruxMarathonClient(object):
             new_object.ports = []
         return changes_in_json, new_object
 
-    def list_marathon_apps(self, marathon_server):
+    def get_marathon_apps(self, marathon_server):
         """
         This method connects to the marathon server and requests all the
         Marathon Apps.
