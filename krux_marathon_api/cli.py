@@ -5,6 +5,7 @@
 #
 
 from __future__ import absolute_import
+import json
 import os
 import sys
 
@@ -13,6 +14,7 @@ import sys
 #
 
 from marathon import MarathonClient
+from marathon.util import MarathonJsonEncoder
 
 #
 # Internal libraries
@@ -32,6 +34,7 @@ class MarathonCliApp(Application):
         self.marathon_user = self.args.username
         self.marathon_pass = self.args.password
         self.marathon_list_apps = self.args.list_apps
+        self.json = self.args.json
         if self.args.config_file:
             ### Handles files passed via i.e. ~/some-link.json and it will translate
             ### to the proper full location
@@ -93,6 +96,12 @@ class MarathonCliApp(Application):
             default=False,
             help='Set flag to delete an app '
         )
+        group.add_argument(
+            '--json',
+            action='store_true',
+            default=False,
+            help='Show output in JSON format'
+        )
 
     def run_app(self):
         """
@@ -130,25 +139,50 @@ class MarathonCliApp(Application):
 
         ### list all apps if flag is called
         if self.marathon_list_apps:
-            current_marathon_apps = self.api.list_marathon_apps(marathon_server)
-            self.logger.info(current_marathon_apps)
+            apps = self.api.get_marathon_apps(marathon_server)
+            if self.json:
+                # the JSON encoder in marathon.util recursively translates all
+                # items into JSON friendly structures
+                print(
+                    json.dumps(
+                        apps,
+                        cls=MarathonJsonEncoder,
+                        sort_keys=True,
+                        indent=4,
+                        separators=(',', ': '),
+                    )
+                )
+            else:
+                for app in apps:
+                    print('{0} => {1}'.format(app.id, app.cmd))
 
         ### Config file load, only if we passed the variable
         if self.marathon_config_file:
             config_file_data = self.api.read_config_file(self.marathon_config_file)
 
-            ### get a specific marathon app
-            marathon_app_result = self.api.get_marathon_app(marathon_server, config_file_data, config_file_data["id"])
-            self.logger.info('marathon app before updates: ')
-            self.logger.info(marathon_app_result)
+            # make it possible to load more than 1 app from a single source file
+            if isinstance(config_file_data, dict):
+                self.logger.debug('found a single app definition in config file')
+                apps = [config_file_data]
+            elif isinstance(config_file_data, list):
+                self.logger.debug('found a list of app definitions in config file')
+                apps = config_file_data
+            else:
+                raise ValueError('Input config file appears to be in the wrong format')
 
-            ### update local app data variable with config file values
-            changes_in_json, new_marathon_app = self.api.assign_config_data(config_file_data, marathon_app_result)
+            for app in apps:
+                ### get a specific marathon app
+                marathon_app_result = self.api.get_marathon_app(marathon_server, app, app["id"])
+                self.logger.info('marathon app before updates: ')
+                self.logger.info(marathon_app_result)
 
-            ### update a marathon app if there was a change in the json file
-            if changes_in_json:
-                self.logger.info('marathon app after updates: ')
-                self.api.update_marathon_app(marathon_server, config_file_data, new_marathon_app)
+                ### update local app data variable with config file values
+                changes_in_json, new_marathon_app = self.api.assign_config_data(app, marathon_app_result)
+
+                ### update a marathon app if there was a change in the json file
+                if changes_in_json:
+                    self.logger.info('marathon app after updates: ')
+                    self.api.update_marathon_app(marathon_server, app, new_marathon_app)
 
         elif self.args.get_app:
             self.logger.info(self.args.get_app)
