@@ -161,10 +161,10 @@ class MarathonCliApp(Application):
             config_file_data = self.api.read_config_file(self.marathon_config_file)
 
             # make it possible to load more than 1 app from a single source file
-            if isinstance(config_file_data, type(dict)):
+            if isinstance(config_file_data, dict):
                 self.logger.debug('found a single app definition in config file')
                 apps = [config_file_data]
-            elif isinstance(config_file_data, type(list)):
+            elif isinstance(config_file_data, list):
                 self.logger.debug('found a list of app definitions in config file')
                 apps = config_file_data
             else:
