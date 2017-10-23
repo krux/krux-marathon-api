@@ -1,7 +1,7 @@
 ### Optional - also available on PyPi
 --extra-index-url https://staticfiles.krxd.net/foss/pypi/
 krux-stdlib==2.5.0
-marathon==0.8.9
+marathon==0.9.3
 
 alabaster==0.7.9
 Babel==2.3.4
