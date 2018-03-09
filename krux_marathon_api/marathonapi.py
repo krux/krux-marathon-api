@@ -160,5 +160,5 @@ class KruxMarathonClient(object):
         """
         self.logger.info("Deleting :")
         self.logger.info(marathon_app)
-        marathon_server.delete_app(marathon_app)
+        marathon_server.delete_app(marathon_app, force=True)
         self.logger.info("Marathon app deleted.")

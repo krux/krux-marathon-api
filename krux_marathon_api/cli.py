@@ -7,6 +7,7 @@
 from __future__ import absolute_import
 import json
 import os
+import re
 import sys
 
 #
@@ -15,6 +16,7 @@ import sys
 
 from marathon import MarathonClient
 from marathon.util import MarathonJsonEncoder
+from marathon.client import MarathonHttpError
 
 #
 # Internal libraries
@@ -92,9 +94,8 @@ class MarathonCliApp(Application):
         )
         group.add_argument(
             '--delete',
-            action='store_true',
-            default=False,
-            help='Set flag to delete an app '
+            default=None,
+            help='delete the named app, if it exists'
         )
         group.add_argument(
             '--json',
@@ -157,7 +158,7 @@ class MarathonCliApp(Application):
                     print('{0} => {1}'.format(app.id, app.cmd))
 
         ### Config file load, only if we passed the variable
-        if self.marathon_config_file:
+        if self.marathon_config_file and not self.args.delete:
             config_file_data = self.api.read_config_file(self.marathon_config_file)
 
             # make it possible to load more than 1 app from a single source file
@@ -192,8 +193,20 @@ class MarathonCliApp(Application):
 
         ### Delete marathon app
         if self.args.delete:
-            self.api.delete_marathon_app(marathon_server, marathon_app_result.id)
-            self.logger.info('Deleting app')
+            ### check if the named app exists
+            try:
+                marathon_app_result = marathon_server.get_app(self.args.delete)
+                self.logger.info('Deleting %s', self.args.delete)
+                self.api.delete_marathon_app(marathon_server, self.args.delete)
+            except MarathonHttpError as marathon_exception:
+                if re.search('HTTP 404', str(marathon_exception)):
+                    self.logger.info('app %s does not exist, nothing to delete', self.args.delete)
+                else:
+                    self.logger.error(marathon_exception)
+                    sys.exit(1)
+            except Exception as e:
+                self.logger.error(e)
+                sys.exit(1)
 
 
 def main():
