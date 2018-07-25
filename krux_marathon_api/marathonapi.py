@@ -81,6 +81,8 @@ class KruxMarathonClient(object):
             old_attr = getattr(old_object, k)
             if new_attr == old_attr:
                 self.logger.debug("%s: <<%s>> is equal to <<%s>>" % (k, old_attr, new_attr))
+            elif isinstance(new_attr, dict) or isinstance(old_attr, dict):
+                self.logger.debug('Attribute dictionaries cannot be checked for equality')
             else:
                 self.logger.debug("%s: updating <<%s>> to <<%s>>" % (k, old_attr, new_attr))
                 ### if at least one attribute changes, flip the flag
