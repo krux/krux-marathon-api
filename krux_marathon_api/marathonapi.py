@@ -24,7 +24,7 @@ import krux.logging
 
 class KruxMarathonClient(object):
     
-    ATTRIBUTES_TO_SKIP = ['upgrade_strategy', 'unreachable_strategy', 'health_checks']
+    ATTRIBUTES_TO_SKIP = ['upgrade_strategy', 'unreachable_strategy', 'health_checks', 'ports']
     
     def __init__(self):
 
