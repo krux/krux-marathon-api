@@ -23,6 +23,9 @@ import krux.logging
 
 
 class KruxMarathonClient(object):
+    
+    ATTRIBUTES_TO_SKIP = ['upgrade_strategy', 'unreachable_strategy', 'health_checks', 'ports']
+    
     def __init__(self):
 
         NAME = 'KruxMarathonClient'
@@ -79,7 +82,9 @@ class KruxMarathonClient(object):
             ### Try to fetch attributes from both objects
             new_attr = getattr(new_object, k)
             old_attr = getattr(old_object, k)
-            if new_attr == old_attr:
+            if k in KruxMarathonClient.ATTRIBUTES_TO_SKIP:
+                self.logger.debug("Attribute dictionaries cannot be checked for equality <<%s>>" % k)
+            elif new_attr == old_attr:
                 self.logger.debug("%s: <<%s>> is equal to <<%s>>" % (k, old_attr, new_attr))
             else:
                 self.logger.debug("%s: updating <<%s>> to <<%s>>" % (k, old_attr, new_attr))
