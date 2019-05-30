@@ -31,8 +31,7 @@ setup(
     download_url=DOWNLOAD_URL,
     license='All Rights Reserved.',
     packages=find_packages(),
-    # dependencies are named in requirements.pip
-    install_requires=[],
+    install_requires=['krux-stdlib', 'marathon'],
     entry_points={
         'console_scripts': [
             'marathon-api = krux_marathon_api.cli:main',
