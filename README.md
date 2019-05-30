@@ -5,7 +5,7 @@ It comes with a sample json config file for specifying state of an app.
 
 The Application defaults to localhost and port 8080 use the host and port flags to change the location.
 
-```marathon-api --host marathon_server.com --port 8081 --list_apps```
+```marathon-api --host marathon_server.com --port 8081 --list-apps```
 
 ## Create / Update Marathon Application
 Requires a valid json file (see sample).
@@ -24,7 +24,7 @@ You can delete an app using the json file or just using the app name
 ## List all Applications
 List all applications on your Marathon Server.
 
-```marathon-api --list_apps```
+```marathon-api --list-apps```
 
 ### List all available commands
 Running ```marathon-api  -h ``` will show you a list of possible commands.
