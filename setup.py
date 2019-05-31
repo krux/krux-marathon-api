@@ -31,6 +31,7 @@ setup(
     download_url=DOWNLOAD_URL,
     license='All Rights Reserved.',
     packages=find_packages(),
+    # dependencies are named in requirements.pip
     install_requires=[],
     entry_points={
         'console_scripts': [
