@@ -31,7 +31,7 @@ setup(
     download_url=DOWNLOAD_URL,
     license='All Rights Reserved.',
     packages=find_packages(),
-    install_requires=['krux-stdlib', 'marathon'],
+    install_requires=[],
     entry_points={
         'console_scripts': [
             'marathon-api = krux_marathon_api.cli:main',
