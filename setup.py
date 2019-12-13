@@ -8,7 +8,7 @@ Package setup for krux-marathon-api
 ######################
 # Standard Libraries #
 ######################
-from __future__ import absolute_import
+
 from setuptools import setup, find_packages
 
 from krux_marathon_api import VERSION
