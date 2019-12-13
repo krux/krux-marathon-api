@@ -37,5 +37,5 @@ setup(
         ],
     },
     zip_safe=False,  # Don't install a single .egg file, it's harder to debug
-    python_requires='~=2.7, ~=3.6',
+    python_requires='~=3.6',
 )
