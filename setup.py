@@ -5,9 +5,7 @@
 """
 Package setup for krux-marathon-api
 """
-######################
 # Standard Libraries #
-######################
 
 from setuptools import setup, find_packages
 

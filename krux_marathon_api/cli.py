@@ -1,26 +1,19 @@
 #!/usr/bin/env python
 
-#
 # Standard libraries
-#
-
 
 import json
 import os
 import re
 import sys
 
-#
 # Third party libraries
-#
 
 from marathon import MarathonClient
 from marathon.util import MarathonJsonEncoder
 from marathon.client import MarathonHttpError
 
-#
 # Internal libraries
-#
 
 from krux.cli import Application, get_group
 import krux_marathon_api.marathonapi
@@ -38,8 +31,8 @@ class MarathonCliApp(Application):
         self.marathon_list_apps = self.args.list_apps
         self.json = self.args.json
         if self.args.config_file:
-            ### Handles files passed via i.e. ~/some-link.json and it will translate
-            ### to the proper full location
+            # Handles files passed via i.e. ~/some-link.json and it will translate
+            # to the proper full location
             self.marathon_config_file = os.path.realpath(
                 os.path.expanduser(self.args.config_file)
             )
@@ -113,8 +106,8 @@ class MarathonCliApp(Application):
         json config file or using the App name from the command line.
         """
 
-        ### if not a single modifier is specified, show the usage string instead
-        ### of segfaulting
+        # if not a single modifier is specified, show the usage string instead
+        # of segfaulting
         if not any([
             self.args.list_apps,
             self.args.config_file,
@@ -131,14 +124,14 @@ class MarathonCliApp(Application):
             password=self.marathon_pass,
         )
 
-        ### validate socket connection with given host and port
+        # validate socket connection with given host and port
         if self.api.connect(self.marathon_host, int(self.marathon_port)):
             self.logger.info('Connection success')
         else:
             self.logger.error('Error connecting to Server')
             raise IOError('Error connecting to Server')
 
-        ### list all apps if flag is called
+        # list all apps if flag is called
         if self.marathon_list_apps:
             apps = self.api.get_marathon_apps(marathon_server)
             if self.json:
@@ -157,7 +150,7 @@ class MarathonCliApp(Application):
                 for app in apps:
                     print('{0} => {1}'.format(app.id, app.cmd))
 
-        ### Config file load, only if we passed the variable
+        # Config file load, only if we passed the variable
         if self.marathon_config_file and not self.args.delete:
             config_file_data = self.api.read_config_file(self.marathon_config_file)
 
@@ -172,15 +165,15 @@ class MarathonCliApp(Application):
                 raise ValueError('Input config file appears to be in the wrong format')
 
             for app in apps:
-                ### get a specific marathon app
+                # get a specific marathon app
                 marathon_app_result = self.api.get_marathon_app(marathon_server, app, app["id"])
                 self.logger.info('marathon app before updates: ')
                 self.logger.info(marathon_app_result)
 
-                ### update local app data variable with config file values
+                # update local app data variable with config file values
                 changes_in_json, new_marathon_app = self.api.assign_config_data(app, marathon_app_result)
 
-                ### update a marathon app if there was a change in the json file
+                # update a marathon app if there was a change in the json file
                 if changes_in_json:
                     self.logger.info('marathon app after updates: ')
                     self.api.update_marathon_app(marathon_server, app, new_marathon_app)
@@ -191,9 +184,9 @@ class MarathonCliApp(Application):
             marathon_app_result = self.api.get_marathon_app(marathon_server, config_file_data, self.args.get_app)
             self.logger.info(marathon_app_result)
 
-        ### Delete marathon app
+        # Delete marathon app
         if self.args.delete:
-            ### check if the named app exists
+            # check if the named app exists
             try:
                 marathon_app_result = marathon_server.get_app(self.args.delete)
                 self.logger.info('Deleting %s', self.args.delete)
