@@ -1,23 +1,16 @@
 #!/usr/bin/env python
 
-#
 # Standard libraries
-#
 
-from __future__ import absolute_import
 import sys
 import socket
 import json
 
-#
 # Third party libraries
-#
 
 from marathon.models import MarathonApp
 
-#
 # Internal libraries
-#
 
 import krux.logging
 
@@ -55,7 +48,7 @@ class KruxMarathonClient(object):
         exit with a value of 1 if it cannot open or parse the json file.
         """
         self.logger.info("Reading config file and formatting data from config file :  " + config_file)
-        ### open and load json config file
+        # open and load json config file
         try:
             with open(config_file) as data_file:
                 data = json.load(data_file)
@@ -65,21 +58,21 @@ class KruxMarathonClient(object):
         return data
 
     def assign_config_data(self, new_data, old_object):
-        ### value for if there is a change in our json file from server values
+        # value for if there is a change in our json file from server values
         changes_in_json = False
 
-        ### iterate through the values that are OK to update (according to marathon-python)
-        ### and if there are changes flip the changes flag
+        # iterate through the values that are OK to update (according to marathon-python)
+        # and if there are changes flip the changes flag
         new_object = MarathonApp().from_json(new_data)
         check_attrs = MarathonApp.UPDATE_OK_ATTRIBUTES
-        ### strip the version because that one changes every time
+        # strip the version because that one changes every time
         if 'version' in check_attrs:
             check_attrs.remove('version')
-        ### Not sure why gpus get defaulted to None, re-setting to 0
+        # Not sure why gpus get defaulted to None, re-setting to 0
         if not new_object.gpus:
             new_object.gpus = 0
         for k in sorted(check_attrs):
-            ### Try to fetch attributes from both objects
+            # Try to fetch attributes from both objects
             new_attr = getattr(new_object, k)
             old_attr = getattr(old_object, k)
             if k in KruxMarathonClient.ATTRIBUTES_TO_SKIP:
@@ -88,11 +81,11 @@ class KruxMarathonClient(object):
                 self.logger.debug("%s: <<%s>> is equal to <<%s>>" % (k, old_attr, new_attr))
             else:
                 self.logger.debug("%s: updating <<%s>> to <<%s>>" % (k, old_attr, new_attr))
-                ### if at least one attribute changes, flip the flag
+                # if at least one attribute changes, flip the flag
                 changes_in_json = True
-        ### special case for ports: if you send both to the marathon api, it will return a 500,
-        ### so you gotta pick one over the other. Usually the port_definitions will be more
-        ### complete, so that's what we're going with.
+        # special case for ports: if you send both to the marathon api, it will return a 500,
+        # so you gotta pick one over the other. Usually the port_definitions will be more
+        # complete, so that's what we're going with.
         if getattr(new_object, 'port_definitions', None) and getattr(new_object, 'ports', None):
             self.logger.warn('Both port and port_definitions are set, using port_definitions only')
             new_object.ports = []
@@ -124,7 +117,7 @@ class KruxMarathonClient(object):
                 marathon_app_result = marathon_server.get_app(app_id)
             except Exception as e:
                 self.logger.warn("App doesn't exist %s. Exception is %s", app_id, e)
-                ### App doesn't exist; initialize it
+                # App doesn't exist; initialize it
                 self.create_marathon_app(marathon_server, config_file_data)
                 marathon_app_result = marathon_server.get_app(config_file_data["id"])
         else:
@@ -141,10 +134,10 @@ class KruxMarathonClient(object):
         values have changed, the App will be updated on the server, otherwise
         it makes no changes.
         """
-        ### API call to marathon server to update the app if the values have changed
-        ### The Marathon package and server API does verification of data so no
-        ### reason to recheck here.
-        ### An app can be stuck in a scaling state, force=True keeps us from getting hung.
+        # API call to marathon server to update the app if the values have changed
+        # The Marathon package and server API does verification of data so no
+        # reason to recheck here.
+        # An app can be stuck in a scaling state, force=True keeps us from getting hung.
         self.logger.info("Update marathon server with updated app data")
         marathon_server.update_app(config_file_data["id"], marathon_app_result, force=True, minimal=True)
 
@@ -155,7 +148,7 @@ class KruxMarathonClient(object):
         self.logger.info("App wasn't found. Creating new marathon app")
         self.logger.info(config_file_data["id"])
 
-        ### Initialize app creation and name space
+        # Initialize app creation and name space
         marathon_server.create_app(config_file_data["id"], MarathonApp(cmd='test', mem=1, cpus=.01))
         self.logger.info("Done creating marathon app.")
 
