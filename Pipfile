@@ -14,8 +14,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-krux-stdlib = "==5.0.0"
-marathon = "==0.13.0"
+krux-stdlib = {index="kruxfoss", version="==5.0.1"}
+marathon = {index="pypi", version="==0.13.0"}
 
 [requires]
 python_version = "3.6"
