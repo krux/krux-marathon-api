@@ -1,3 +1,5 @@
+# THIS REPOSITORY IS NO LONGER MAINTAINED AND ARCHIVED.
+
 # krux-marathon-api
 
 This is a command line tool to help create, delete, and keep Marathon apps in a specified state.
